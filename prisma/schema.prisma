@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -15,10 +14,11 @@ datasource db {
 }
 
 model Ticket {
-  id        Int      @id @default(autoincrement())
-  title     String   @db.VarChar(5000)
-  priority  Priority
-  status    Status   @default(OPEN)
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(250)
+  description String   @db.VarChar(5000)
+  priority    Priority
+  status      Status   @default(OPEN)
 }
 
 enum Priority {
