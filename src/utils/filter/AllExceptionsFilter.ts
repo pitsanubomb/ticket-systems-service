@@ -16,7 +16,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
         const responseBody = {
             statusCode: httpStatus,
             timestamp: new Date().toISOString(),
+            method: httpAdapter.getRequestMethod(ctx.getRequest()),
             path: httpAdapter.getRequestUrl(ctx.getRequest()),
+            data: {
+                message: 'Have Something Error'
+            }
         }
 
         httpAdapter.reply(ctx.getResponse(), responseBody, httpStatus);

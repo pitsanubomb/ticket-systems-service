@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
-import { TicketController } from './ticket/ticket.controller';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { AllExceptionsFilter } from './utils/filter/AllExceptionsFilter';
 import { TransfromInterceptor } from './utils/interceptors/TransfromInterceptor';
+import { TicketModule } from './ticket/ticket.module';
 
 @Module({
-  imports: [],
-  controllers: [TicketController],
+  imports: [TicketModule],
   providers: [
     // Interceptor
     {
