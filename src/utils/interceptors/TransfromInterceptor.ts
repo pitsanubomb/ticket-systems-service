@@ -20,6 +20,7 @@ export class TransfromInterceptor<T> implements NestInterceptor<T, Response<T>> 
         
         return next.handle().pipe(map((data) => ({
             statusCode: res.statusCode,
+            timestamp: new Date().toISOString(),
             method: req.method,
             path: req.path,
             data
