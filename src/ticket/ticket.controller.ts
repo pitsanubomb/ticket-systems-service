@@ -1,15 +1,14 @@
-import { Body, Controller, Get, HttpCode, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from "@nestjs/common";
 import { TicketService } from "./ticket.service";
-import { Priority } from "@prisma/client";
+import { Priority, Status } from "@prisma/client";
 
 @Controller('tickets')
 export class TicketController {
     constructor (private readonly ticketService:TicketService) {}
     
-    @Get('/')
-    @HttpCode(200)
-    async findAllTickets() {
-        return this.ticketService.findAllTicket(1, 10)
+    @Get()
+    async findAllTickets(@Query('page') page: number, @Query('page-size') pageSize: number, @Query('status') status:Status, @Query('priority') priority:Priority ,@Query('search') search?:string) {
+        return this.ticketService.findAllTicket(Number(page), Number(pageSize), status, priority, search)
     }
 
     @Post()
@@ -31,6 +30,26 @@ export class TicketController {
             console.debug(error)
         }
        
+    }
+
+    @Get(':id')
+    async findTicketById(@Param('id') id: number) {
+        return this.ticketService.findTicketById(Number(id))
+    }
+
+    @Put(':id')
+    async updateTicketById(@Param('id') id:number, @Body() ticket: {
+        title: string,
+        description: string,
+        status: Status,
+        priority: Priority
+    }) {
+        return this.ticketService.updateTicketById(Number(id), ticket)
+    }
+
+    @Delete(':id')
+    async deleteTicketById(@Param('id') id: number) {
+        return this.ticketService.deleteTicketById(Number(id))
     }
 
 }
