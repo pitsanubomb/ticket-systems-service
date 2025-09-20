@@ -19,15 +19,10 @@ export class TicketController {
     }) {
     
         const {title, description, piority} = ticketData
+        await this.ticketService.createTicket(title, description, piority)
 
-        try {
-            await this.ticketService.createTicket(title, description, piority)
-
-            return {
-                message: 'Create ticket successfully'    
-            }
-        } catch (error) {
-            console.debug(error)
+        return {
+            message: 'Create ticket successfully'    
         }
        
     }
