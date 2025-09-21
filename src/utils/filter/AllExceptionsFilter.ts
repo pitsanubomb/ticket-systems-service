@@ -19,7 +19,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
             method: httpAdapter.getRequestMethod(ctx.getRequest()),
             path: httpAdapter.getRequestUrl(ctx.getRequest()),
             data: {
-                message: 'Have Something Error'
+                message: exception.message || 'Have Something Error'
             }
         }
 
