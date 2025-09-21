@@ -7,7 +7,7 @@ import { Queue } from "bullmq";
 @Injectable()
 export class TicketService {
     private Logger = new Logger('TICKET SERVICES');
-    constructor(private prisma: PrismaService, @InjectQueue('notificationQueue') private notificationQueue: Queue) {}
+    constructor(private prisma: PrismaService, @InjectQueue('TicketNotifyJob') private notificationQueue: Queue) {}
 
     async createTicket(title: string, description: string, priority:Priority) {
         this.Logger.log('Create Tickets')
@@ -32,6 +32,7 @@ export class TicketService {
         }, {
             jobId: `notify-${ticketId}`
         });
+        
 
         return {
             message: 'Create ticket successfully'

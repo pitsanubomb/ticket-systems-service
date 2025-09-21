@@ -24,7 +24,7 @@ import { TicketProcessor } from './ticket.processor';
           }
         }),
         BullModule.registerQueue({
-            name: 'notificationQueue'
+            name: 'TicketNotifyJob'
         })
     ],
     controllers: [TicketController],
