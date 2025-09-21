@@ -4,6 +4,7 @@ import { PrismaModule } from 'src/core/prisma/prisma.module';
 import { TicketService } from './ticket.service';
 import { BullModule } from '@nestjs/bullmq';
 import { TicketProcessor } from './ticket.processor';
+import { TicketSlaProcesser } from './ticket-sla.processor';
 
 @Module({
     imports: [
@@ -25,9 +26,12 @@ import { TicketProcessor } from './ticket.processor';
         }),
         BullModule.registerQueue({
             name: 'TicketNotifyJob'
+        }),
+        BullModule.registerQueue({
+            name: 'TicketSlaJob'
         })
     ],
     controllers: [TicketController],
-    providers: [TicketService,TicketProcessor],
+    providers: [TicketService,TicketProcessor,TicketSlaProcesser],
 })
 export class TicketModule {}

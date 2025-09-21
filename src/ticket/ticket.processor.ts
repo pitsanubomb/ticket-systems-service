@@ -23,15 +23,19 @@ export class TicketProcessor extends WorkerHost {
         switch (job.name) {
             case 'CREATE':
                 this.Logger.log(defaultLogMessage);  
+                await job.updateProgress(100)
 
             case 'READ':
                 this.Logger.log(`${defaultLogMessage} where ticketId: ${ticketId}`)
+                await job.updateProgress(100)
             
             case 'UPDATE':
                 this.Logger.log(`${defaultLogMessage} where ticketId: ${ticketId}`);
+                await job.updateProgress(100)
 
             case 'DELETE':
                 this.Logger.log(`${defaultLogMessage} where ticketId: ${ticketId}`)
+                await job.updateProgress(100)
         }
 
     }
