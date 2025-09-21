@@ -2,7 +2,7 @@ import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Injectable, Logger } from "@nestjs/common";
 import { Job } from 'bullmq';
 
-@Processor('notificationQueue')
+@Processor('TicketNotifyJob')
 @Injectable()
 export class TicketProcessor extends WorkerHost {
     private Logger = new Logger('Notification Processor Que')
