@@ -1,21 +1,41 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "src/core/prisma/prisma.service";
 import { Status, Priority, Prisma, Ticket } from '@prisma/client';
+import { InjectQueue } from "@nestjs/bullmq";
+import { Queue } from "bullmq";
 
 @Injectable()
 export class TicketService {
     private Logger = new Logger('TICKET SERVICES');
-    constructor(private prisma: PrismaService) {}
+    constructor(private prisma: PrismaService, @InjectQueue('notificationQueue') private notificationQueue: Queue) {}
 
     async createTicket(title: string, description: string, priority:Priority) {
         this.Logger.log('Create Tickets')
-        return await this.prisma.ticket.create({
+        const { id: ticketId } =  await this.prisma.ticket.create({
             data: {
                 title,
                 description,
                 priority 
+            },
+            select: {
+                id: true
             }
-        })
+        });
+
+
+        await this.notificationQueue.add('CREATE', {
+            ticketId,
+            title: title,
+            priority: priority,
+            status: 'OPEN',
+            type: 'CREATE'
+        }, {
+            jobId: `notify-${ticketId}`
+        });
+
+        return {
+            message: 'Create ticket successfully'
+        }
     }
 
     async findAllTicket(page: number, limit: number, status?: Status, priority?: Priority, search?:string, orderBy?:string, orderDirection? :string) {
@@ -69,23 +89,67 @@ export class TicketService {
     }
 
     async findTicketById(id: number) {
-        this.Logger.log(`Find ticket by id: ${id}`)
-        return this.prisma.ticket.findUnique({where: {id}})
+        this.Logger.log(`Find ticket by id: ${id}`);
+        const response =  await this.prisma.ticket.findUnique({where: {id}});
+
+        if(!response) {
+            throw new NotFoundException(`Ticket with id ${id} not found`);
+        }
+
+        await this.notificationQueue.add('READ', {
+            ticketId: id,
+            title: response.title,
+            priority: response.priority,
+            status: response.status,
+            type: 'READ'
+        }, {
+            jobId: `notify-${id}`
+        });
+
+        return response;
     }
 
     async updateTicketById(id: number, data:{ title: string, description: string, status: Status, priority: Priority}) {
         this.Logger.log(`Update tickets by id: ${id}`)
-        return await this.prisma.ticket.update(
+        const response =  await this.prisma.ticket.update(
         {
             where: {
                 id
             },
             data
         });
+
+        await this.notificationQueue.add('UPDATE', {
+            ticketId:id,
+            title:response.title,
+            priority: response.priority,
+            status: response.status,
+            type: 'UPDATE'
+        }, {
+            jobId: `notify-${id}`
+        })
+
+        return response;
     }
 
     async deleteTicketById(id: number) {
         this.Logger.log(`Delete ticket by id: ${id}`)
-        return this.prisma.ticket.delete({where: {id}})
+        const response =  await this.prisma.ticket.delete({where: {id}})
+
+        if(!response) {
+            throw new NotFoundException(`Can't delete ticket id ${id} not found`)
+        }
+
+        await this.notificationQueue.add('DELETE', {
+            ticketId:id,
+            title:response.title,
+            priority: response.priority,
+            status: response.status,
+            type: 'DELETE'
+        }, {
+            jobId: `notify-${id}`
+        })
+
+        return response;
     }
 }
