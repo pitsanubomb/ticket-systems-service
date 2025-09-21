@@ -4,7 +4,7 @@ import { Job } from "bullmq";
 
 @Processor('TicketSlaJob')
 @Injectable()
-export class TicketSla extends WorkerHost {
+export class TicketSlaProcesser extends WorkerHost {
      private Logger = new Logger('Notification Processor Que')
      async process(job: Job): Promise<void> {
          const jobId = job.id;
@@ -18,5 +18,6 @@ export class TicketSla extends WorkerHost {
         this.Logger.log(`SLA check completed for Ticket ID: ${id}`);
         
         this.Logger.log(`Successfully add SLA task to ticket to ${jobId}`)
+        await job.updateProgress(100)
      }
 }

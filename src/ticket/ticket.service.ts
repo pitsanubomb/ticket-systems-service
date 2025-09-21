@@ -7,7 +7,7 @@ import { Queue } from "bullmq";
 @Injectable()
 export class TicketService {
     private Logger = new Logger('TICKET SERVICES');
-    constructor(private prisma: PrismaService, @InjectQueue('TicketNotifyJob') private notificationQueue: Queue) {}
+    constructor(private prisma: PrismaService, @InjectQueue('TicketNotifyJob') private notificationQueue: Queue, @InjectQueue('TicketSlaJob') private ticketSlaQue: Queue) {}
 
     async createTicket(title: string, description: string, priority:Priority) {
         this.Logger.log('Create Tickets')
@@ -32,6 +32,13 @@ export class TicketService {
         }, {
             jobId: `notify-${ticketId}`
         });
+
+        await this.ticketSlaQue.add('CHECK', {
+            id: ticketId
+        }, {
+            jobId: `sla-${ticketId}`,
+            delay: 15 * 60 * 1000
+        })
         
 
         return {
@@ -94,7 +101,7 @@ export class TicketService {
         const response =  await this.prisma.ticket.findUnique({where: {id}});
 
         if(!response) {
-            throw new NotFoundException(`Ticket with id ${id} not found`);
+            throw new NotFoundException(`Can't Get Ticket with id ${id} not found`);
         }
 
         await this.notificationQueue.add('READ', {
@@ -112,6 +119,7 @@ export class TicketService {
 
     async updateTicketById(id: number, data:{ title: string, description: string, status: Status, priority: Priority}) {
         this.Logger.log(`Update tickets by id: ${id}`)
+        const jobId = `sla-${id}`;
         const response =  await this.prisma.ticket.update(
         {
             where: {
@@ -119,16 +127,42 @@ export class TicketService {
             },
             data
         });
+        
+        if(!response) {
+            throw new NotFoundException(`Can't Update Ticket with id ${id} not found`);
+        }
 
-        await this.notificationQueue.add('UPDATE', {
-            ticketId:id,
-            title:response.title,
+       await this.notificationQueue.add('UPDATE', {
+            ticketId: id,
+            title: response.title,
             priority: response.priority,
             status: response.status,
             type: 'UPDATE'
         }, {
             jobId: `notify-${id}`
-        })
+        });
+
+
+        const slaQue = await this.ticketSlaQue.getJob(jobId)
+
+        // Update Que (Add Que) If status != RESOLVED And Remove is RESOLVED
+        if(response.status === Status.RESOLVED && slaQue) {
+            await this.ticketSlaQue.remove(jobId)
+            this.Logger.log(`Remove Job: ${id} as ticketId: ${id}`)
+        } else if(response.status !== Status.RESOLVED && slaQue) {
+            await slaQue.updateData({
+                id: id
+            })
+        } else if(response.status !== Status.RESOLVED && !slaQue) {
+            this.ticketSlaQue.add('CHECK', {
+                id: id
+            },{
+                jobId: jobId,
+                delay: 15 * 60 * 1000
+            })
+        } else {
+            this.Logger.log(`Ticket id: ${id} is resolved`)
+        }
 
         return response;
     }
@@ -138,7 +172,7 @@ export class TicketService {
         const response =  await this.prisma.ticket.delete({where: {id}})
 
         if(!response) {
-            throw new NotFoundException(`Can't delete ticket id ${id} not found`)
+            throw new NotFoundException(`Can't Delete Ticket with id ${id} not found`)
         }
 
         await this.notificationQueue.add('DELETE', {
