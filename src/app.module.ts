@@ -8,6 +8,7 @@ import { TicketModule } from './ticket/ticket.module';
 import { BullModule } from '@nestjs/bullmq';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { ExpressAdapter } from '@bull-board/express';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { ExpressAdapter } from '@bull-board/express';
       route: '/queues', // Base route for the dashboard
       adapter: ExpressAdapter
     }),
+    AdminModule,
     TicketModule,
   ],
   providers: [
