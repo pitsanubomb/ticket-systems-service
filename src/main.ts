@@ -4,6 +4,7 @@ import { HttpAdapterHost } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './utils/filter/AllExceptionsFilter';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -44,6 +45,18 @@ async function bootstrap() {
   
   const httpAdapterHost = app.get(HttpAdapterHost);
   app.useGlobalFilters(new AllExceptionsFilter(httpAdapterHost));
+
+  app.use(helmet({
+    crossOriginEmbedderPolicy: false,
+    contentSecurityPolicy: {
+    directives: {
+      imgSrc: [`'self'`],
+      scriptSrc: [`'self'`, `https: 'unsafe-inline'`],
+      manifestSrc: [`'self'`],
+      frameSrc: [`'self'`],
+      },
+    },
+  }));
   
   // Setup Swagger only when not in production
   if (environment !== 'production') {
