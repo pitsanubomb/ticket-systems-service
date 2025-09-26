@@ -8,8 +8,8 @@ export class TicketController {
     
     @Get()
     async findAllTickets(@Query() query: QueryTicketDto) {
-        const { page = 1, 'page-size': pageSize = 10, status, priority, search } = query;
-        return this.ticketService.findAllTicket(page, pageSize, status, priority, search);
+        const { page = 1, 'page-size': pageSize = 10, status, priority, search, orderBy, orderDirection } = query;
+        return this.ticketService.findAllTicket(page, pageSize, status, priority, search, orderBy, orderDirection);
     }
 
     @Post()
