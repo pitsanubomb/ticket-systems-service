@@ -1,23 +1,19 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, ValidationPipe } from "@nestjs/common";
 import { TicketService } from "./ticket.service";
-import { Priority, Status } from "@prisma/client";
+import { CreateTicketDto, UpdateTicketDto, QueryTicketDto } from "./dto";
 
 @Controller('tickets')
 export class TicketController {
     constructor (private readonly ticketService:TicketService) {}
     
     @Get()
-    async findAllTickets(@Query('page') page: number, @Query('page-size') pageSize: number, @Query('status') status:Status, @Query('priority') priority:Priority ,@Query('search') search?:string) {
-        return this.ticketService.findAllTicket(Number(page), Number(pageSize), status, priority, search)
+    async findAllTickets(@Query(new ValidationPipe({ transform: true })) query: QueryTicketDto) {
+        const { page = 1, 'page-size': pageSize = 10, status, priority, search } = query;
+        return this.ticketService.findAllTicket(page, pageSize, status, priority, search)
     }
 
     @Post()
-    async createTicket(@Body() ticketData: {
-        title: string,
-        description: string,
-        priority: Priority,
-        status?: Status
-    }) {
+    async createTicket(@Body(ValidationPipe) ticketData: CreateTicketDto) {
         const {title, description, priority, status} = ticketData
         await this.ticketService.createTicket(title, description, priority, status)
 
@@ -33,12 +29,7 @@ export class TicketController {
     }
 
     @Put(':id')
-    async updateTicketById(@Param('id') id:number, @Body() ticket: {
-        title: string,
-        description: string,
-        status: Status,
-        priority: Priority
-    }) {
+    async updateTicketById(@Param('id') id:number, @Body(ValidationPipe) ticket: UpdateTicketDto) {
         return this.ticketService.updateTicketById(Number(id), ticket)
     }
 
