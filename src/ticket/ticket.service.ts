@@ -9,13 +9,14 @@ export class TicketService {
     private Logger = new Logger('TICKET SERVICES');
     constructor(private prisma: PrismaService, @InjectQueue('TicketNotifyJob') private notificationQueue: Queue, @InjectQueue('TicketSlaJob') private ticketSlaQue: Queue) {}
 
-    async createTicket(title: string, description: string, priority:Priority) {
+    async createTicket(title: string, description: string, priority:Priority, status?: Status) {
         this.Logger.log('Create Tickets')
         const { id: ticketId } =  await this.prisma.ticket.create({
             data: {
                 title,
                 description,
-                priority 
+                priority,
+                status 
             },
             select: {
                 id: true

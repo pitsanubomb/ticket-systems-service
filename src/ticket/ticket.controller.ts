@@ -15,11 +15,12 @@ export class TicketController {
     async createTicket(@Body() ticketData: {
         title: string,
         description: string,
-        piority: Priority
+        priority: Priority,
+        status?: Status
     }) {
     
-        const {title, description, piority} = ticketData
-        await this.ticketService.createTicket(title, description, piority)
+        const {title, description, priority, status} = ticketData
+        await this.ticketService.createTicket(title, description, priority, status)
 
         return {
             message: 'Create ticket successfully'    
