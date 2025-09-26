@@ -18,7 +18,6 @@ export class TicketController {
         priority: Priority,
         status?: Status
     }) {
-    
         const {title, description, priority, status} = ticketData
         await this.ticketService.createTicket(title, description, priority, status)
 
